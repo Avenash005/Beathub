@@ -1,67 +1,56 @@
-# Dockerizing a Node.js Application - COMPLETED ✅
+# End-to-End File Upload Integration - COMPLETED ✅
 
-## Task Summary
-Created a production-ready Dockerfile for the Node.js backend following Docker best practices.
+## Task Overview
+Connect the frontend ImageUpload component to the backend upload endpoint to enable creating posts with cover images.
 
-## Files Created/Modified
+## Implementation Steps
 
-### 1. server/Dockerfile (NEW)
-```dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-EXPOSE 5000
-CMD ["node", "server.js"]
+### 1. Backend Updates - ✅ COMPLETED
+- [x] Create Post model with coverImage field (server/models/Post.js)
+- [x] Mongoose dependency already in package.json
+- [x] Update POST /api/posts route to accept coverImage (server/routes/posts.js)
+- [x] MongoDB connection in server.js (with graceful fallback to in-memory)
+
+### 2. Frontend - Upload Flow - ✅ ALREADY IMPLEMENTED
+- [x] Axios in client/package.json
+- [x] api.js service with auth interceptor (client/src/services/api.js)
+- [x] handleUpload in CreatePost.jsx
+- [x] Loading states (uploading, submitting)
+- [x] Error handling with toast
+
+### 3. Frontend - Post Creation - ✅ ALREADY IMPLEMENTED
+- [x] Two-step flow: upload first → then create post
+- [x] coverImageUrl in post data
+- [x] Form reset after success
+
+### 4. Dashboard Rendering - ✅ ALREADY IMPLEMENTED
+- [x] Conditional cover image display
+- [x] Meaningful alt text: `alt={"Cover image for ${post.title}"}`
+
+## Files Modified
+
+### New Files Created
+1. **server/models/Post.js** - Post Mongoose schema with coverImage field
+
+### Modified Files
+1. **server/server.js** - Added MongoDB connection with graceful fallback
+2. **server/routes/posts.js** - Updated to use MongoDB with coverImage support
+
+## Architecture
+```
+User selects image → handleUpload → POST /api/upload 
+  → Cloudinary → returns secure_url → stored in coverImageUrl
+  
+User submits post → POST /api/posts (with coverImageUrl)
+  → MongoDB saves post with coverImage field
+  
+Dashboard → GET /api/posts → displays image if exists
 ```
 
-### 2. server/server.js (MODIFIED)
-- Added `process.env.PORT || 5000` to allow port configuration via environment variable
-
-## Key Docker Best Practices Implemented
-
-| Instruction | Purpose |
-|-------------|---------|
-| `FROM node:18-alpine` | Minimal, secure base image (~170MB) |
-| `WORKDIR /app` | Set working directory |
-| `COPY package*.json ./` | Copy package files first (layer caching) |
-| `RUN npm ci` | Deterministic dependency install |
-| `COPY . .` | Copy code after dependencies |
-| `EXPOSE 5000` | Document port |
-| `CMD ["node", "server.js"]` | Start command |
-
-## Layer Caching Optimization
-- **First build**: ~140s (no cache)
-- **Rebuild after code change**: ~5s (dependencies cached)
-
-This is 27x faster than copying everything together!
-
-## Commands to Build & Run
-
-```bash
-# Build the image
-docker build -t creator-platform-server .
-
-# Run the container
-docker run -p 5000:5000 creator-platform-server
-
-# Verify it's running
-docker ps
-# Open browser: http://localhost:5000
-```
-
-## PR Commands (for GitHub submission)
-```bash
-git checkout -b feature/dockerize-backend
-git add server/Dockerfile server/server.js
-git commit -m "Dockerize Node.js backend with best practices"
-git push origin feature/dockerize-backend
-```
-
-## Video Walkthrough Requirements (2-3 minutes)
-Your video should explain:
-1. What each Dockerfile instruction does
-2. Why package files are copied before code (layer caching)
-3. Why npm ci is preferred over npm install
-4. Live demo: docker build → docker run → docker ps → browser
+## Testing Scenarios (to test manually)
+1. Post with image - full flow works
+2. Post without image - works gracefully  
+3. Upload error - shows error message
+4. Large file - client-side validation catches it
+5. MongoDB - verify document with Cloudinary URL stored
+6. Cloudinary Media Library - verify uploaded image appears
