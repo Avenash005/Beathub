@@ -8,5 +8,11 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      // Inline socket reconnection logic for production
+      window.SOCKET_URL = window.location.hostname === 'localhost' 
+        ? 'http://localhost:5000' 
+        : window.location.origin;
+    </script>
   </body>
 </html>

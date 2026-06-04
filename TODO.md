@@ -1,67 +1,85 @@
-# Dockerizing a Node.js Application - COMPLETED ✅
+# Dockerizing a React Application - COMPLETED ✅
 
-## Task Summary
-Created a production-ready Dockerfile for the Node.js backend following Docker best practices.
+## Files Created
 
-## Files Created/Modified
-
-### 1. server/Dockerfile (NEW)
+### 1. client/Dockerfile (Multi-Stage Build)
 ```dockerfile
-FROM node:18-alpine
+# Stage 1: Build
+FROM node:18-alpine AS build
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
-EXPOSE 5000
-CMD ["node", "server.js"]
+RUN npm run build
+
+# Stage 2: Serve with Nginx
+FROM nginx:alpine
+COPY --from=build /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
 ```
 
-### 2. server/server.js (MODIFIED)
-- Added `process.env.PORT || 5000` to allow port configuration via environment variable
+### 2. client/nginx.conf (SPA Routing)
+```nginx
+server {
+    listen 80;
+    root /usr/share/nginx/html;
+    index index.html;
 
-## Key Docker Best Practices Implemented
+    # Gzip compression
+    gzip on;
+    gzip_types text/plain application/json application/javascript;
 
-| Instruction | Purpose |
-|-------------|---------|
-| `FROM node:18-alpine` | Minimal, secure base image (~170MB) |
-| `WORKDIR /app` | Set working directory |
-| `COPY package*.json ./` | Copy package files first (layer caching) |
-| `RUN npm ci` | Deterministic dependency install |
-| `COPY . .` | Copy code after dependencies |
-| `EXPOSE 5000` | Document port |
-| `CMD ["node", "server.js"]` | Start command |
+    # Cache static assets 1 year
+    location ~* \.(js|css|png|jpg|...) { expires 1y; }
 
-## Layer Caching Optimization
-- **First build**: ~140s (no cache)
-- **Rebuild after code change**: ~5s (dependencies cached)
+    # SPA fallback
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+```
 
-This is 27x faster than copying everything together!
+### 3. client/.dockerignore
+```
+node_modules
+dist
+.git
+.env
+```
 
-## Commands to Build & Run
+## Key Concepts Explained
 
+| Concept | Explanation |
+|---------|-------------|
+| Multi-stage build | Stage 1 builds, Stage 2 serves - smaller final image |
+| COPY --from=build | Copies files from build stage to nginx stage |
+| try_files | SPA fallback - /dashboard returns index.html |
+| Layer caching | package*.json copied separately for cache |
+
+## Build & Test Commands
 ```bash
-# Build the image
-docker build -t creator-platform-server .
+# Build image
+cd client && docker build -t creator-platform-client .
 
-# Run the container
-docker run -p 5000:5000 creator-platform-server
+# Check image size
+docker images | grep client
 
-# Verify it's running
-docker ps
-# Open browser: http://localhost:5000
+# Run container
+docker run -p 8080:80 creator-platform-client
+
+# Test SPA routing
+# Open: http://localhost:8080/dashboard
+# Refresh - should NOT return 404
 ```
 
-## PR Commands (for GitHub submission)
+## PR Commands
 ```bash
-git checkout -b feature/dockerize-backend
-git add server/Dockerfile server/server.js
-git commit -m "Dockerize Node.js backend with best practices"
-git push origin feature/dockerize-backend
+git add client/Dockerfile client/nginx.conf client/.dockerignore
+git commit -m "Dockerize React frontend with multi-stage build"
 ```
 
-## Video Walkthrough Requirements (2-3 minutes)
-Your video should explain:
-1. What each Dockerfile instruction does
-2. Why package files are copied before code (layer caching)
-3. Why npm ci is preferred over npm install
-4. Live demo: docker build → docker run → docker ps → browser
+## Video Requirements (3-5 min)
+Part 1: Explain multi-stage build, COPY --from, try_files
+Part 2: Show image size, container running, SPA routing demo
