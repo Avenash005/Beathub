@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import socket from '../services/socket';
+import socket, { updateSocketAuth } from '../services/socket';
+import toast from 'react-hot-toast';
 
 function Dashboard() {
   const [posts, setPosts] = useState([]);
@@ -7,6 +8,9 @@ function Dashboard() {
   const [socketId, setSocketId] = useState(null);
 
   useEffect(() => {
+    // Update auth token before connecting
+    updateSocketAuth();
+
     // Define event handlers
     const handleConnect = () => {
       console.log('Connected to server with ID:', socket.id);
@@ -25,10 +29,17 @@ function Dashboard() {
       setConnectionStatus('error');
     };
 
+    // Handler for newPost events - shows toast notification
+    const handleNewPost = (data) => {
+      console.log('Received newPost event:', data);
+      toast.success(data.message);
+    };
+
     // Add event listeners
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
     socket.on('connect_error', handleConnectError);
+    socket.on('newPost', handleNewPost);
 
     // Connect to Socket.io server
     socket.connect();
@@ -45,6 +56,7 @@ function Dashboard() {
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);
       socket.off('connect_error', handleConnectError);
+      socket.off('newPost', handleNewPost);
 
       // Disconnect the socket
       socket.disconnect();
