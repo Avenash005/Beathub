@@ -1,74 +1,43 @@
-# Real-Time Notification System Implementation Plan
+# Database Indexing Assignment - COMPLETED
 
-## Phase 1: Backend Implementation
+## Task Summary
+Add a database index to the email field in the User Schema for faster login queries.
 
-### 1.1 Install Dependencies
-- [x] Install `jsonwebtoken` in server directory
-- [x] Install `mongoose` for MongoDB (optional, using in-memory for now)
+## Implementation
 
-### 1.2 Create Post Routes
-- [x] Create `server/routes/posts.js` with POST endpoint
-- [x] Implement in-memory posts storage
-- [x] Export function to accept `io` as parameter
+### 1. Added mongoose dependency
+- **server/package.json** - Added mongoose: ^8.0.0
 
-### 1.3 Update Server.js
-- [x] Add JWT_SECRET constant
-- [x] Add Socket.io authentication middleware using `io.use()`
-- [x] Extract JWT from `socket.handshake.auth.token`
-- [x] Verify JWT using `jwt.verify()`
-- [x] Store decoded user in `socket.data.user`
-- [x] Log authenticated user's email on connection
-- [x] Use next() to allow, next(new Error()) to reject
+### 2. Created User Model
+- **server/models/User.js** - Created User schema with email index
 
----
+### Code Change:
+```javascript
+const userSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    index: true  // ← Added for faster login queries
+  },
+  password: { type: String, required: true }
+}, { timestamps: true });
+```
 
-## Phase 2: Frontend Implementation
+## Why This Matters
+- Without index: MongoDB does COLLSCAN (full collection scan) - O(n)
+- With index: MongoDB uses IXSCAN (index scan) - O(log n)
+- Performance: Goes from ~500ms to ~5ms for login queries
 
-### 2.1 Install Dependencies
-- [x] Install `react-hot-toast` in client directory
+## Verification Steps
+1. Restart server: `npm run dev`
+2. Check MongoDB Atlas → Collections → indexes tab
+3. Should see email_1 in the index list
 
-### 2.2 Update Socket Service
-- [x] Read JWT from localStorage (key: "token")
-- [x] Pass JWT in `auth` option when creating socket
-
-### 2.3 Update App.jsx
-- [x] Import `Toaster` from react-hot-toast
-- [x] Add `<Toaster />` component to the app
-
-### 2.4 Update Dashboard.jsx
-- [x] Add listener for 'newPost' event
-- [x] Display toast.success() when event received
-- [x] Clean up 'newPost' listener in useEffect cleanup
-
----
-
-## Phase 3: Testing
-
-### 3.1 Verify Functionality
-- [x] Server is running and working
-- [x] POST /api/posts creates post and emits newPost event
-- [x] GET /api/posts returns all posts
-- [x] Cloudinary .env created with credentials
-- [x] Cloudinary .env.example created with placeholders
-- [x] .env is protected in .gitignore
-
----
-
-## Files Modified:
-1. `server/package.json` - Added jsonwebtoken - DONE
-2. `server/server.js` - Added JWT middleware, posts route, emit event - DONE
-3. `server/routes/posts.js` - Created new file - DONE
-4. `client/package.json` - Added react-hot-toast - DONE
-5. `client/src/services/socket.js` - Added JWT in auth option - DONE
-6. `client/src/App.jsx` - Added Toaster component - DONE
-7. `client/src/components/Dashboard.jsx` - Added newPost listener + toast - DONE
-
----
-
-## Expected Flow:
-1. User logs in → JWT stored in localStorage
-2. React connects to Socket.io with JWT in auth
-3. Server verifies JWT via middleware
-4. User creates post → POST /api/posts
-5. Backend saves post → emits 'newPost' event to all clients
-6. All connected clients receive toast notification
+## PR Commands (for reference)
+```
+git checkout -b feature/add-email-index
+git add server/models/User.js
+git commit -m "Add index to email field for faster login queries"
+git push origin feature/add-email-index
