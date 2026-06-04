@@ -33,6 +33,9 @@ function Dashboard() {
     const handleNewPost = (data) => {
       console.log('Received newPost event:', data);
       toast.success(data.message);
+      
+      // Refetch posts after new post is created
+      fetchPosts();
     };
 
     // Add event listeners
@@ -44,11 +47,8 @@ function Dashboard() {
     // Connect to Socket.io server
     socket.connect();
 
-    // Fetch posts from API
-    fetch('/api/posts')
-      .then(res => res.json())
-      .then(data => setPosts(data))
-      .catch(err => console.error('Error fetching posts:', err));
+    // Fetch posts
+    fetchPosts();
 
     // Cleanup function - runs when component unmounts
     return () => {
@@ -64,6 +64,14 @@ function Dashboard() {
     };
   }, []);
 
+  // Fetch posts from API
+  const fetchPosts = () => {
+    fetch('/api/posts')
+      .then(res => res.json())
+      .then(data => setPosts(data))
+      .catch(err => console.error('Error fetching posts:', err));
+  };
+
   return (
     <div className="dashboard">
       <h1>Creator's Platform Dashboard</h1>
@@ -78,9 +86,18 @@ function Dashboard() {
         <h3>Latest Posts</h3>
         <ul>
           {posts.map(post => (
-            <li key={post.id}>
+            <li key={post.id} className="post-item">
+              {/* Conditionally render cover image */}
+              {post.coverImage && (
+                <img 
+                  src={post.coverImage} 
+                  alt={`Cover image for ${post.title}`}
+                  className="post-cover-image"
+                />
+              )}
               <h4>{post.title}</h4>
               <p>By: {post.author}</p>
+              {post.content && <p className="post-content">{post.content}</p>}
             </li>
           ))}
         </ul>

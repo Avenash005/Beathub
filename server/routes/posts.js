@@ -9,7 +9,7 @@ let postIdCounter = 1;
 module.exports = function(io) {
   // POST /api/posts - Create a new post
   router.post('/posts', (req, res) => {
-    const { title, content, author } = req.body;
+    const { title, content, author, coverImage } = req.body;
     
     if (!title || !content) {
       return res.status(400).json({ error: 'Title and content are required' });
@@ -21,6 +21,7 @@ module.exports = function(io) {
       title,
       content,
       author: author || 'Anonymous',
+      coverImage: coverImage || null,
       createdAt: new Date().toISOString()
     };
     
