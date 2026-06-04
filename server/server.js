@@ -69,6 +69,10 @@ io.on('connection', (socket) => {
 const postsRouter = require('./routes/posts')(io);
 app.use('/api', postsRouter);
 
+// Import and use upload router
+const uploadRouter = require('./routes/upload');
+app.use('/api', uploadRouter);
+
 // Start the server
 const PORT = 5000;
 server.listen(PORT, () => {
