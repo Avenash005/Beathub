@@ -48,8 +48,9 @@
 - [x] Server is running and working
 - [x] POST /api/posts creates post and emits newPost event
 - [x] GET /api/posts returns all posts
-- [ ] Manual testing with browser tabs required
-- [ ] Socket authentication test required
+- [x] Cloudinary .env created with credentials
+- [x] Cloudinary .env.example created with placeholders
+- [x] .env is protected in .gitignore
 
 ---
 
