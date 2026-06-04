@@ -3,9 +3,13 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 
 // JWT Secret for token verification
 const JWT_SECRET = 'your-secret-key-change-in-production';
+
+// MongoDB connection string
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/creators-platform';
 
 // Create Express app
 const app = express();
@@ -73,9 +77,23 @@ app.use('/api', postsRouter);
 const uploadRouter = require('./routes/upload');
 app.use('/api', uploadRouter);
 
-// Start the server
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`Socket.io ready at http://localhost:${PORT}`);
-});
+// Connect to MongoDB and start server
+const startServer = async () => {
+  try {
+    // Try to connect to MongoDB
+    await mongoose.connect(MONGODB_URI);
+    console.log('Connected to MongoDB');
+  } catch (err) {
+    // If MongoDB connection fails, continue without it (development mode)
+    console.log('MongoDB connection failed, using in-memory storage:', err.message);
+  }
+
+  // Start the server
+  const PORT = process.env.PORT || 5000;
+  server.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+    console.log(`Socket.io ready at http://localhost:${PORT}`);
+  });
+};
+
+startServer();
