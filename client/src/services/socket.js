@@ -9,7 +9,15 @@ export const socket = io(SERVER_URL, {
   autoConnect: false,
   reconnection: true,
   reconnectionAttempts: 5,
-  reconnectionDelay: 1000
+  reconnectionDelay: 1000,
+  // auth option is set dynamically when connecting
+  auth: {}
 });
+
+// Update auth token before connecting
+export const updateSocketAuth = () => {
+  const token = localStorage.getItem('token');
+  socket.auth = { token: token || '' };
+};
 
 export default socket;
