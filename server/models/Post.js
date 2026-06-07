@@ -1,11 +1,10 @@
 const mongoose = require('mongoose');
 
-// Post Schema
+// Post Schema - includes coverImage field for storing Cloudinary URL
 const postSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: true,
-    trim: true
+    required: true
   },
   content: {
     type: String,
@@ -15,17 +14,12 @@ const postSchema = new mongoose.Schema({
     type: String,
     default: 'Anonymous'
   },
+  // Cover image from Cloudinary - optional, allows text-only posts
   coverImage: {
     type: String,
     default: null
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
   }
-});
+}, { timestamps: true });
 
-// Create Post model
-const Post = mongoose.model('Post', postSchema);
-
-module.exports = Post;
+// Export Post model
+module.exports = mongoose.model('Post', postSchema);
