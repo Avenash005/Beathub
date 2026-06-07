@@ -5,8 +5,7 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 
-// JWT Secret for token verification
-const JWT_SECRET = 'your-secret-key-change-in-production';
+const PORT = process.env.PORT || 5000;
 
 // MongoDB connection string
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/creators-platform';
@@ -44,38 +43,11 @@ io.use((socket, next) => {
     return next(new Error('No token'));
   }
   
-  // Verify the JWT token
-  jwt.verify(token, JWT_SECRET, (err, decoded) => {
-    if (err) {
-      console.log('Connection rejected: Invalid token');
-      return next(new Error('Invalid token'));
-    }
-    
-    // Store user data in socket for later use
-    socket.data.user = decoded;
-    console.log('Token verified for user:', decoded.email || decoded.username || 'unknown');
-    next();
+  server.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+    console.log(`Socket.io ready at http://localhost:${PORT}`);
   });
-});
-
-// Socket.io connection handler
-io.on('connection', (socket) => {
-  const userEmail = socket.data.user?.email || socket.data.user?.username || 'unknown';
-  console.log(`User connected: ${socket.id} (${userEmail})`);
-
-  // Handle disconnect event
-  socket.on('disconnect', () => {
-    console.log(`User disconnected: ${socket.id}`);
-  });
-});
-
-// Import and use posts router with io
-const postsRouter = require('./routes/posts')(io);
-app.use('/api', postsRouter);
-
-// Import and use upload router
-const uploadRouter = require('./routes/upload');
-app.use('/api', uploadRouter);
+};
 
 // Connect to MongoDB and start server
 const startServer = async () => {
